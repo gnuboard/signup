@@ -41,10 +41,9 @@ interface SignUpFormProps {
     name: string;
   };
   setFormData: (data: any) => void;
-  handleSubmit: (e: React.FormEvent) => void;
 }
 
-export function SignUpForm({ formData, setFormData, handleSubmit: onSubmit }: SignUpFormProps) {
+export function SignUpForm({ formData, setFormData }: SignUpFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState('');
   const [errors, setErrors] = useState<any>({});
@@ -107,10 +106,31 @@ export function SignUpForm({ formData, setFormData, handleSubmit: onSubmit }: Si
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit: React.FormEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
-    if (validateForm()) {
-      onSubmit(e);
+    
+    if (!validateForm()) {
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        throw new Error('회원가입 처리 중 오류가 발생했습니다.');
+      }
+
+      const data = await response.json();
+      alert(data.message);
+      // TODO: 회원가입 성공 후 처리 (예: 로그인 페이지로 이동)
+    } catch (error) {
+      alert(error instanceof Error ? error.message : '회원가입 처리 중 오류가 발생했습니다.');
     }
   };
 
