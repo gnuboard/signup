@@ -2,11 +2,11 @@ import { SignUpForm } from "@/components/SignUpForm"
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-lg shadow-md p-6">
-        <h1 className="text-2xl font-bold text-center mb-6">회원가입</h1>
-        <SignUpForm />
-      </div>
+    <main className="flex min-h-screen flex-col items-center justify-center p-24">
+      <h1 className="text-4xl font-bold mb-4">환영합니다!</h1>
+      <p className="text-gray-600">
+        로그인하거나 회원가입을 통해 서비스를 이용해보세요.
+      </p>
     </main>
   )
-} 
+}
