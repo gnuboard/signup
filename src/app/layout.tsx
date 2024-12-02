@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
-import { initDb } from "@/lib/db";
+import { initializeDb } from '@/lib/db';
+import { Providers } from '@/components/Providers';
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -20,18 +21,8 @@ export const metadata: Metadata = {
   description: "회원가입 기능이 있는 앱입니다.",
 };
 
-// 데이터베이스 초기화 시도
-const initDatabase = async () => {
-  try {
-    console.log('Initializing database from layout...');
-    await initDb();
-    console.log('Database initialized successfully');
-  } catch (error) {
-    console.error('Failed to initialize database:', error);
-  }
-};
-
-initDatabase();
+// 앱 시작 시 데이터베이스 초기화
+initializeDb().catch(console.error);
 
 export default function RootLayout({
   children,
@@ -43,8 +34,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Navbar />
-        <main className="container mx-auto px-4 py-8">{children}</main>
+        <Providers>
+          <Navbar />
+          <main className="container mx-auto px-4 py-8">{children}</main>
+        </Providers>
       </body>
     </html>
   );

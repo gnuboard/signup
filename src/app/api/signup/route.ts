@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { email, password, name } = body;
+    const { email, password } = body;
 
     // 비밀번호 해시화 (salt rounds = 10)
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -15,7 +15,6 @@ export async function POST(request: Request) {
       message: '회원가입이 완료되었습니다.',
       user: {
         email,
-        name,
         // 해시된 비밀번호는 응답에 포함하지 않음
       }
     });
