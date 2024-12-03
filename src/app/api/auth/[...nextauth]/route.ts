@@ -29,7 +29,6 @@ const authOptions = {
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        // 먼저 이메일 입력 체크
         if (!credentials?.email || !credentials?.password) {
           throw new Error('이메일과 비밀번호를 입력해주세요.')
         }
@@ -41,13 +40,9 @@ const authOptions = {
           throw new Error('등록되지 않은 이메일입니다.')
         }
 
-        // 소셜 로그인 사용자 체크
-        if (user.provider && user.social_id) {
-          throw new Error(`${user.provider} 소셜 로그인으로 가입된 계정입니다. ${user.provider} 로그인을 이용해주세요.`)
-        }
-
-        if (!user.password) {
-          throw new Error('소셜 로그인으로 가입된 계정입니다.')
+        // 소셜 로그인 사용자 체크를 먼저 수행
+        if (user.social_id) {
+          throw new Error('SocialLoginUser')
         }
 
         const isValid = await bcrypt.compare(credentials.password, user.password)

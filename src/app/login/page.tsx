@@ -34,7 +34,6 @@ export default function LoginPage() {
     e.preventDefault()
     
     // 폼 유효성 검사
-    const loginData = { email, password }
     const emailValidation = validateForm(emailSchema, email)
     const passwordValidation = validateForm(passwordSchema, password)
     
@@ -73,17 +72,18 @@ export default function LoginPage() {
 
       if (!result?.ok) {
         // 서버 인증 실패 시 각각의 필드에 대한 에러 메시지 설정
-        if (result?.error === 'InvalidEmail') {
+        if (result?.error === 'SocialLoginUser') {
+          setErrors({
+            email: ['소셜 로그인으로 가입된 계정입니다. 소셜 로그인을 이용해주세요.'],
+            password: [] // 비밀번호 필드의 에러는 지웁니다
+          })
+        } else if (result?.error === 'InvalidEmail') {
           setErrors({
             email: ['등록되지 않은 이메일입니다.']
           })
         } else if (result?.error === 'InvalidPassword') {
           setErrors({
             password: ['비밀번호가 올바르지 않습니다.']
-          })
-        } else if (result?.error === 'SocialLoginUser') {
-          setErrors({
-            email: ['소셜 로그인으로 가입된 계정입니다. 소셜 로그인을 이용해주세요.']
           })
         } else {
           setErrors({
