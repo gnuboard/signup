@@ -37,7 +37,7 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">
+    <div className="min-h-screen bg-gray-50 flex items-start justify-center pt-20 p-4">
       <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-xl shadow-lg">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900">비밀번호 재설정</h1>

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { SignUpForm } from "@/components/SignUpForm"
 import { signIn } from 'next-auth/react';
+import { generateRandomUsername } from '@/lib/constants';
 
 export default function SignUpPage() {
   const router = useRouter();

@@ -8,15 +8,13 @@ import { ErrorMessage } from '@/components/ErrorMessage';
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { data: session, status, update: updateSession } = useSession();
   const [user, setUser] = useState<any>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
-    password: '',
   });
   const [error, setError] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<ValidationError>({});
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -24,56 +22,39 @@ export default function ProfilePage() {
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login');
-      return;
-    }
-
-    if (status === 'authenticated') {
+    } else if (status === 'authenticated' && session?.user) {
       const fetchUser = async () => {
         try {
           const response = await fetch('/api/user');
           const data = await response.json();
           
-          if (data.error) {
-            setError(data.error);
-            return;
-          }
-          
           if (data.user) {
             setUser(data.user);
-            setFormData({ name: data.user.name, password: '' });
+            setFormData({ name: data.user.name });
           }
         } catch (error) {
           console.error('Failed to fetch user:', error);
-          setError('사용자 정보를 불러오는데 실패했습니다.');
+          setError('Failed to load user data');
         }
       };
 
       fetchUser();
     }
-  }, [status, router]);
+  }, [status, session, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { isValid, errors } = validateForm(profileUpdateSchema, formData);
-    
-    if (!isValid) {
-      setErrors(errors);
-      return;
-    }
-
     setIsLoading(true);
+    setError('');
     setMessage('');
 
     try {
-      const updateData: { name?: string; password?: string } = {};
+      const updateData: { name?: string } = {};
       if (formData.name !== user.name) updateData.name = formData.name;
-      if (formData.password) updateData.password = formData.password;
 
       const response = await fetch('/api/user', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updateData),
       });
 
@@ -81,29 +62,28 @@ export default function ProfilePage() {
         throw new Error('Failed to update profile');
       }
 
+      const data = await response.json();
+
+      // 세션 데이터 업데이트
+      await updateSession(data.session);
+
       setMessage('프로필이 성공적으로 업데이트되었습니다.');
-      if (!formData.password) {
-        setFormData({ ...formData, password: '' });
-      }
-      setUser({ ...user, name: formData.name });
+      setUser(data.user);
       setIsEditing(false);
     } catch (error) {
-      setMessage('프로필 업데이트에 실패했습니다.');
+      console.error('Error updating profile:', error);
+      setError('프로필 업데이트에 실패했습니다.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  if (status === 'loading') {
+  if (status === 'loading' || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-xl">Loading...</div>
       </div>
     );
-  }
-
-  if (status === 'unauthenticated') {
-    return null;
   }
 
   return (
@@ -114,6 +94,12 @@ export default function ProfilePage() {
         {error && (
           <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">
             {error}
+          </div>
+        )}
+        
+        {message && (
+          <div className={`mt-2 text-sm ${message.includes('실패') ? 'text-red-600' : 'text-green-600'}`}>
+            {message}
           </div>
         )}
         
@@ -154,36 +140,6 @@ export default function ProfilePage() {
               />
               <ErrorMessage errors={errors.name} />
             </div>
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                새 비밀번호 (선택사항)
-              </label>
-              <div className="relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  id="password"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  disabled={isLoading}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 text-sm text-gray-600 hover:text-gray-800"
-                  disabled={isLoading}
-                >
-                  {showPassword ? "숨김" : "표시"}
-                </button>
-              </div>
-              <ErrorMessage errors={errors.password} />
-            </div>
-
-            {message && (
-              <div className={`mt-2 text-sm ${message.includes('실패') ? 'text-red-600' : 'text-green-600'}`}>
-                {message}
-              </div>
-            )}
 
             <div className="flex gap-4">
               <button
@@ -197,7 +153,7 @@ export default function ProfilePage() {
                 type="button"
                 onClick={() => {
                   setIsEditing(false);
-                  setFormData({ name: user.name, password: '' });
+                  setFormData({ name: user.name });
                 }}
                 className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
               >
