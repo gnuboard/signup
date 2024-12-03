@@ -2,6 +2,7 @@
 
 import { signIn } from 'next-auth/react'
 import { FcGoogle } from 'react-icons/fc'
+import { SiNaver } from 'react-icons/si'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { emailSchema, passwordSchema, validateForm } from '@/lib/validations'
@@ -16,6 +17,14 @@ export default function LoginPage() {
   const handleGoogleSignIn = async () => {
     try {
       await signIn('google', { callbackUrl: '/' })
+    } catch (error) {
+      console.error('로그인 에러:', error)
+    }
+  }
+
+  const handleNaverSignIn = async () => {
+    try {
+      await signIn('naver', { callbackUrl: '/' })
     } catch (error) {
       console.error('로그인 에러:', error)
     }
@@ -99,7 +108,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-start justify-center pt-20 p-4">
+    <div className="min-h-screen bg-gray-50 flex items-start justify-center pt-10 sm:pt-16 p-4">
       <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-xl shadow-lg">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900">로그인</h1>
@@ -191,6 +200,13 @@ export default function LoginPage() {
           >
             <FcGoogle className="w-5 h-5" />
             <span>Google로 계속하기</span>
+          </button>
+          <button
+            onClick={handleNaverSignIn}
+            className="w-full flex items-center justify-center gap-3 px-4 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+          >
+            <SiNaver className="w-5 h-5 text-[#03C75A]" />
+            <span>Naver로 계속하기</span>
           </button>
         </div>
       </div>

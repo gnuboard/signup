@@ -1,6 +1,7 @@
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
+import NaverProvider from "next-auth/providers/naver";
 import bcrypt from 'bcryptjs';
 import { 
   getUserByEmail,
@@ -14,7 +15,8 @@ import {
 } from '@/lib/db';
 import { randomUUID } from 'crypto';
 
-const handler = NextAuth({
+// authOptions 객체를 먼저 정의
+const authOptions = {
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -27,13 +29,21 @@ const handler = NextAuth({
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
+        // 먼저 이메일 입력 체크
         if (!credentials?.email || !credentials?.password) {
           throw new Error('이메일과 비밀번호를 입력해주세요.')
         }
 
+        // 이메일로 사용자 조회
         const user = await getUserByEmail(credentials.email)
+        
         if (!user) {
           throw new Error('등록되지 않은 이메일입니다.')
+        }
+
+        // 소셜 로그인 사용자 체크
+        if (user.provider && user.social_id) {
+          throw new Error(`${user.provider} 소셜 로그인으로 가입된 계정입니다. ${user.provider} 로그인을 이용해주세요.`)
         }
 
         if (!user.password) {
@@ -52,6 +62,18 @@ const handler = NextAuth({
           image: user.image
         }
       }
+    }),
+    NaverProvider({
+      clientId: process.env.NAVER_CLIENT_ID!,
+      clientSecret: process.env.NAVER_CLIENT_SECRET!,
+      profile(profile) {
+        return {
+          id: profile.response.id,
+          name: profile.response.name,
+          email: profile.response.email,
+          image: profile.response.profile_image
+        }
+      }
     })
   ],
   callbacks: {
@@ -59,35 +81,52 @@ const handler = NextAuth({
       try {
         await initializeDb();
 
-        if (account?.provider === 'google') {
+        if (account?.provider === 'google' || account?.provider === 'naver') {
           const existingUser = await getUserByEmail(user.email!);
           if (!existingUser) {
             await createUser({
               email: user.email!,
               name: user.name!,
               image: user.image,
-              provider: 'google',
+              provider: account.provider,
               social_id: user.id
             });
+          } else {
+            const db = await openDb();
+            await db.run(
+              `UPDATE users 
+               SET social_id = ?, image = ?, provider = ? , password = NULL 
+               WHERE email = ?`,
+              [user.id, user.image, account.provider, user.email]
+            );
+            user.name = existingUser.name;
           }
         }
+
         return true;
       } catch (error) {
         console.error('Sign in error:', error);
         return false;
       }
     },
+    async jwt({ token, user, trigger, session }) {
+      if (trigger === "update" && session?.name) {
+        // 세션 업데이트 시 토큰 업데이트
+        token.name = session.name;
+      }
+      if (user) {
+        // 초기 로그인 시 토큰 설정
+        token.sub = user.id;
+        token.name = user.name;
+      }
+      return token;
+    },
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.sub as string;
+        session.user.name = token.name as string;
       }
       return session;
-    },
-    async jwt({ token, user }) {
-      if (user) {
-        token.sub = user.id;
-      }
-      return token;
     }
   },
   pages: {
@@ -96,6 +135,10 @@ const handler = NextAuth({
   session: {
     strategy: "jwt"
   }
-});
+}
+
+// NextAuth 핸들러 생성
+const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST };
+export { authOptions };

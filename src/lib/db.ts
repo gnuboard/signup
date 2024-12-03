@@ -122,3 +122,8 @@ export async function verifyPasswordResetToken(token: string) {
   
   return result;
 }
+
+// initDb 함수 정의
+export const initDb = async () => {
+  // initDb 함수 구현
+}

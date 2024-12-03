@@ -64,8 +64,10 @@ export default function ProfilePage() {
 
       const data = await response.json();
 
-      // 세션 데이터 업데이트
-      await updateSession(data.session);
+      // 세션 업데이트 - name만 전달
+      await updateSession({
+        name: formData.name
+      });
 
       setMessage('프로필이 성공적으로 업데이트되었습니다.');
       setUser(data.user);

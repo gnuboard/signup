@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { signUpSchema, validateForm, ValidationError } from '@/lib/validations';
 import { ErrorMessage } from '@/components/ErrorMessage';
+import NaverProvider from "next-auth/providers/naver"
 
 interface SignUpFormProps {
   formData: {
@@ -170,6 +171,23 @@ export function SignUpForm({ formData, setFormData, handleSubmit, disabled }: Si
             />
           </svg>
           Google로 계속하기
+        </button>
+
+        <button
+          onClick={async () => {
+            const result = await signIn('naver', { 
+              callbackUrl: '/profile',
+              redirect: false // 리다이렉트를 false로 설정하여 결과값 확인
+            });
+            console.log('네이버 로그인 결과:', result);
+          }}
+          className="mt-2 w-full flex items-center justify-center gap-3 bg-white text-gray-700 border border-gray-300 rounded-lg px-4 py-2 text-sm font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={disabled}
+        >
+          <svg className="w-5 h-5" viewBox="0 0 20 20" fill="none">
+            <path d="M13.5615 10.4773L6.14772 0H0V20H6.43847V9.52267L13.8523 20H20V0H13.5615V10.4773Z" fill="#03C75A"/>
+          </svg>
+          네이버로 계속하기
         </button>
       </div>
     </div>
